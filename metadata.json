@@ -1363,7 +1363,571 @@
   },
   "serverbound": {
     "play": {
-
+      "0x00": {
+        "url": "https://wiki.vg/Protocol#Confirm_Teleportation",
+        "name": "ConfirmTeleport",
+        "description": "Sent by the client as a confirmation of the Synchronize Player Position packet",
+        "notes": "Synchronize Player Position Packet: https://wiki.vg/Protocol#Synchronize_Player_Position",
+        "fields": {
+          "teleportId": "The ID given by the Synchonize Player Position packet"
+        }
+      },
+      "0x05": {
+        "url": "https://wiki.vg/Protocol#Chat_Message",
+        "name": "ChatMessage",
+        "description": "Used to send a chat message to the server. The message may not be longer than 256 characters or else the server will kick the client.",
+        "notes": "The server will broadcast the same chat message to all players on the server (including the player that sent the message), prepended with player's name. Specifically, it will respond with a translate chat component, 'chat.type.text' with the first parameter set to the display name of the player (including some chat component logic to support clicking the name to send a PM) and the second parameter set to the message. See processing chat for more information.",
+        "fields": {
+          "message": "The message itself",
+          "timestamp": "Client-side generated timestamp when message was sent to server",
+          "salt": "The salt used to verify the signature hash",
+          "hasSignature": "Whether the field signature is present",
+          "signature": "The signature used to verify the chat message's authentication. When present, always 256 bytes",
+          "messageCount": "Offset of acknowledgment. Acknowledgement holds the messages the client has recently seen, as well as the last message they received if any. TODO: More information",
+          "acknowledged": "Bitset of acknowledgment. TODO: More information"
+        }
+      },
+      "0x07": {
+        "url": "https://wiki.vg/Protocol#Client_Command",
+        "name": "ClientCommand",
+        "description": "",
+        "notes": "Action id 0: Sent when the client is ready to complete login and when the client is ready to respawn after death.\nAction id 1: Sent when the client opens the Statistics menu.",
+        "fields": {
+          "actionName": "Name of the action",
+          "actionId": "Id of the action"
+        }
+      },
+      "0x03": {
+        "url": "https://wiki.vg/Protocol#Message_Acknowledgment",
+        "name": "MessageAcknowledgment",
+        "description": null,
+        "notes": null,
+        "fields": {
+          "count": "Also known as offset. TODO"
+        }
+      },
+      "0x01": {
+        "url": "https://wiki.vg/Protocol#Query_Block_Entity_Tag",
+        "name": "QueryBlockEntityTag",
+        "description": "Used when Shift + F3 + I is pressed while looking at a block.",
+        "notes": null,
+        "fields": {
+          "transactionId": "An incremental ID so that the client can verify that the response matches the request",
+          "location": "The location of the block to check"
+        }
+      },
+      "0x0A": {
+        "url": "https://wiki.vg/Protocol#Click_Container_Button",
+        "name": "ClickWindowButton",
+        "description": "Used when clicking on window buttons. Until 1.14, this was only used by enchanting tables.",
+        "notes": "Button ID meanings:\nEnchanting Table\n- 0: Topmost enchantment\n- 1: Middle enchantment\n- 2: Bottom enchantment\n\nLectern\n- 1: Previous page (which does give a redstone output)\n- 2: Next page\n- 3: Take book\n- 100 + page: Opened page number => 100 + number\n\nStonecutter\n- Recipe button number - 4 * row + col: Depends on the item\n\nLoom\n- Recipe button number - 4 * row + col: Depends on the item",
+        "fields": {
+          "windowId": "The ID of the window sent by Open Screen Packet",
+          "buttonId": "Meaining dependends on the window type. See notes."
+        }
+      },
+      "0x0B": {
+        "url": "https://wiki.vg/Protocol#Click_Container",
+        "name": "ClickContainer",
+        "description": "This packet is sent by the client when the player clicks on a slot in a window.",
+        "notes": "For a detailed description of the distinct type performed by the client, see wiki.vg entry",
+        "fields": {
+          "windowId": "The ID of the window which was clicked. 0 for player inventory",
+          "stateId": "The last received State ID from either a Set Container Slot or a Set Container Content packet",
+          "slot": "The clicked slot number",
+          "button": "The button used in the click",
+          "mode": "Inventory operation mode",
+          "slots": "New data for slots",
+          "slots.slot": "The slot number",
+          "slots.item": "The new itemstack for that slot",
+          "carriedItem": "Item carried by the cursor. Has to be empty (Item ID = -1) for drop mode, otherwise nothing will happen."
+        }
+      },
+      "0x0E": {
+        "url": "https://wiki.vg/Protocol#Edit_Book",
+        "name": "EditBook",
+        "description": "Send by the client when the player edits a book / drafted book / signs book",
+        "notes": null,
+        "fields": {
+          "slot": "The hotbar slot where the written book is located",
+          "pageCount": "Number of pages in the book",
+          "entries": "Text from each page. Array of String(8192)",
+          "title": "Title of book. Optional String(128)"
+        }
+      },
+      "0x0F": {
+        "url": "https://wiki.vg/Protocol#Query_Entity_Tag",
+        "name": "QueryEntityTag",
+        "description": "Used when Shift + F3 + I is pressed while looking at an entity.",
+        "notes": null,
+        "fields": {
+          "transactionId": "An incremental ID so that the client can verify that the response matches the request",
+          "entityId": "The ID of the entity to query.",
+          "entity": "The entity to query."
+        }
+      },
+      "0x06": {
+        "url": "https://wiki.vg/Protocol#Player_Session",
+        "name": "PlayerSession",
+        "description": null,
+        "notes": null,
+        "fields": {
+          "sessionId": "UUID. TODO",
+          "expiresAt": "The time the play session key expires in milliseconds",
+          "publicKey": "A byte array of an X.509-encoded public key",
+          "keySignature": "The signature consists of the player UUID, the key expiration timestamp and the public key data. These values are hashed using SHA-1 and signed using Mojang's private RSA key."
+        }
+      },
+      "0x02": {
+        "url": "https://wiki.vg/Protocol#Change_Difficulty_2",
+        "name": "ChangeDifficulty",
+        "description": "Changes the current game difficulty",
+        "notes": "Must have at least op level 2 to use. Appears to only be used on singleplayer; the difficulty buttons are still disabled in multiplayer",
+        "fields": {
+          "difficulty": "New difficulty. 0: Peaceful, 1: Easy, 2: Normal, 3: Hard"
+        }
+      },
+      "0x13": {
+        "url": "https://wiki.vg/Protocol#Lock_Difficulty",
+        "name": "LockDifficulty",
+        "description": "Locks the current difficulty. If a difficulty is locked, other players won't be able to change it",
+        "notes": "Must have at least op level 2 to use. Appears to only be used on singleplayer; the difficulty buttons are still disabled in multiplayer",
+        "fields": {
+          "difficultyLocked": "Whether the difficulty is locked"
+        }
+      },
+      "0x1C": {
+        "url": "https://wiki.vg/Protocol#Player_Abilities_2",
+        "name": "PlayerAbilities",
+        "description": "Sent by the client when player abilities are changed",
+        "notes": "The vanilla client sends this packet when the player starts/stops flying with the Flags paramter changed accordingly",
+        "fields": {
+          "flying": "True if the player is flying. Part of a bit mask"
+        }
+      },
+      "0x1E": {
+        "url": "https://wiki.vg/Protocol#Player_Command",
+        "name": "PlayerCommand",
+        "description": "Sent by the client to indicate it has performed certain actions",
+        "notes": "Example actions: Sneaking, sprinting, exiting a bed, jumping with a horse, opening a horse's inventory while riding it, ... For a full list, see wiki.vg entry",
+        "fields": {
+          "actionId": "Id of the action",
+          "jumpBoost": "Only used by the 'start jump with horse' action, in which case it ranges from 0 to 100. In all other cases it is 0"
+        }
+      },
+      "0x0D": {
+        "url": "https://wiki.vg/Protocol#Plugin_Message_2",
+        "name": "PluginMessage",
+        "description": "Mods and plugins can use this to send their data. Minecraft itself uses several plugin channels. These internal channels are in the minecraft namespace. More information on how it works on Dinnerbone's blog. More documentation about internal and popular registered channels are here (https://wiki.vg/Plugin_channels)",
+        "notes": "In Notchian client, the maximum data length is 1048576 bytes. Dinnerbone's blog: https://dinnerbone.com/blog/2012/01/13/minecraft-plugin-channels-messaging/",
+        "fields": {
+          "channel": "Name of the plugin channel used to send the data.",
+          "data": "Any data. The length of this array must be inferred from the packet length."
+        }
+      },
+      "0x0C": {
+        "url": "https://wiki.vg/Protocol#Close_Container_2",
+        "name": "CloseContainer",
+        "description": "This packet is sent by the client when closing a window",
+        "notes": "Notchian clients send a Close Window packet with Window ID 0 to close their inventory even though there is never an Open Screen packet for the inventory. ",
+        "fields": {
+          "windowId": "The ID of the window that was closed. 0 for player inventory."
+        }
+      },
+      "0x04": {
+        "url": "https://wiki.vg/Protocol#Chat_Command",
+        "name": "ChatCommand",
+        "description": "A packet used to execute commands on the server.",
+        "notes": "This truncates the command to at most 256 characters before sending to the server on the client. If the server receives the command longer than 256 characters, it will reject the message and disconnect the client.",
+        "fields": {
+          "command": "The command typed by the client. String(256)",
+          "timestamp": "The timestamp when the command was sent.",
+          "salt": "The salt for the following argument signatures",
+          "argumentSignatures": "The argument signatures for the command.",
+          "argumentSignatures.name": "The name of the argument that is signed by the signature",
+          "argumentSignatures.signature": "The signature that verifies the argument. Always 256 bytes",
+          "messageCount": "",
+          "acknowledged": ""
+        }
+      },
+      "0x25": {
+        "url": "https://wiki.vg/Protocol#Seen_Advancements",
+        "name": "SeenAdvancements",
+        "description": null,
+        "notes": null,
+        "fields": {
+          "action": "0: Opened tab, 1: Closed screen",
+          "tabId": "Only present if action is Opened Tab"
+        }
+      },
+      "0x1D": {
+        "url": "https://wiki.vg/Protocol#Player_Action",
+        "name": "PlayerAction",
+        "description": "Sent when the player performs various actions",
+        "notes": "Mining Block Actions: A Notchian server only accepts digging packets with coordinates within a 6-unit radius between the center of the block and 1.5 units from the player's feet (not their eyes). ",
+        "fields": {
+          "pos": "Block position.",
+          "direction": "The face being hit",
+          "action": "The action the player is taking against the block",
+          "actionName": "Name of the action",
+          "sequence": "TODO"
+        }
+      },
+      "0x2B": {
+        "url": "https://wiki.vg/Protocol#Set_Creative_Mode_Slot",
+        "name": "SetCreativeModeSlot",
+        "description": "While the user is in the standard inventory (i.e., not a crafting bench) in Creative mode, the player will send this packet.",
+        "notes": "Clicking in the creative inventory menu is quite different from non-creative inventory management. Picking up an item with the mouse actually deletes the item from the server, and placing an item into a slot or dropping it out of the inventory actually tells the server to create the item from scratch. (This can be verified by clicking an item that you don't mind deleting, then severing the connection to the server; the item will be nowhere to be found when you log back in.) As a result of this implementation strategy, the "Destroy Item" slot is just a client-side implementation detail that means "I don't intend to recreate this item.". Additionally, the long listings of items (by category, etc.) are a client-side interface for choosing which item to create. Picking up an item from such listings sends no packets to the server; only when you put it somewhere does it tell the server to create the item in that location.\nThis action can be described as "set inventory slot". Picking up an item sets the slot to item ID -1. Placing an item into an inventory slot sets the slot to the specified item. Dropping an item (by clicking outside the window) effectively sets slot -1 to the specified item, which causes the server to spawn the item entity, etc.. All other inventory slots are numbered the same as the non-creative inventory (including slots for the 2x2 crafting menu, even though they aren't visible in the vanilla client).",
+        "fields": {
+          "slot": "Inventory slot",
+          "stack": "Clicked item"
+        }
+      },
+      "0x28": {
+        "url": "https://wiki.vg/Protocol#Set_Held_Item_2",
+        "name": "SetHeldItem",
+        "description": "Sent when the player changes the slot selection",
+        "notes": null,
+        "fields": {
+          "selectedSlot": "The slot which the player has selected (0-8)"
+        }
+      },
+      "0x2C": {
+        "url": "https://wiki.vg/Protocol#Program_Jigsaw_Block",
+        "name": "ProgramJigsawBlock",
+        "description": "Sent when Done is pressed on the Jigsaw Block interface",
+        "notes": "Take a look at https://minecraft.fandom.com/wiki/Jigsaw_Block for more information about the Jigsaw Block",
+        "fields": {
+          "pos": "Block entity location",
+          "name": "",
+          "target": "",
+          "pool": "",
+          "finalState": "'Turns Into' on the GUI, 'final_state' in NBT",
+          "joint": "'rollable' if the attached piece can be rotated, else 'aligned'"
+        }
+      },
+      "0x29": {
+        "url": "https://wiki.vg/Protocol#Program_Command_Block",
+        "name": "ProgramCommandBlock",
+        "description": "Sent when Done is pressed on the Command Block interface",
+        "notes": null,
+        "fields": {
+          "pos": "Location of the command block",
+          "command": "The command held in the command block. String(32767)",
+          "trackOutput": "If true, the command block will store the command output and display it in a little text-box",
+          "conditional": "Used for chaining multiple command blocks. If true, command block only executes if the command block behind has executed successfully (Success count is greater than 0)",
+          "alwaysActive": "If true, the command block will run without any source of redstone",
+          "type": "Either SEQUENCE (0), AUTO (1) or REDSTONE (2)"
+        }
+      },
+      "0x2A": {
+        "url": "https://wiki.vg/Protocol#Program_Command_Block_Minecart",
+        "name": "ProgramCommandBlockMinecart",
+        "description": "Sent when Done is pressed on the Command Block Minecart interface",
+        "notes": null,
+        "fields": {
+          "entityId": "Entity ID of the Minecart",
+          "entity": "The Minecart entity",
+          "command": "The command held in the command block. String(32767)",
+          "trackOutput": "If true, the command block will store the command output and display it in a little text-box"
+        }
+      },
+      "0x2D": {
+        "url": "https://wiki.vg/Protocol#Program_Structure_Block",
+        "name": "ProgramStructureBlock",
+        "description": "Sent when Done is pressed on the Structure Block interface",
+        "notes": "Possible actions:\n0 - Update data\n1 - Save the structure\n2 - Load the structure\n3 - Detect size",
+        "fields": {
+          "location": "Location of the structure block",
+          "action": "An additional action to perform beyond simply saving the given data. See notes",
+          "mode": "",
+          "name": "Name of the preset. String(32767)",
+          "offset": "Between -32 and 32",
+          "size": "Between 0 and 32",
+          "mirror": "",
+          "rotation": "",
+          "metadata": "Additional metadata. String(128)",
+          "integrity": "Between 0 and 1",
+          "seed": "",
+          "ignoreEntities": "",
+          "showAir": "",
+          "showBoundingBox": ""
+        }
+      },
+      "0x2E": {
+        "url": "https://wiki.vg/Protocol#Update_Sign",
+        "name": "UpdateSign",
+        "description": "This message is sent from the client to the server when the “Done” button is pushed after placing a sign.",
+        "notes": "The server only accepts this packet after Open Sign Editor, otherwise this packet is silently ignored. ",
+        "fields": {
+          "location": "Coordinates of the sign",
+          "lines": "The four lines of text on the sign. String(384)"
+        }
+      },
+      "0x26": {
+        "url": "https://wiki.vg/Protocol#Select_Trade",
+        "name": "SelectTrade",
+        "description": "When a player selects a specific trade offered by a villager NPC.",
+        "notes": null,
+        "fields": {
+          "tradeId": "The selected slot in the players current (trading) inventory. (Was a full Integer for the plugin message). "
+        }
+      },
+      "0x24": {
+        "url": "https://wiki.vg/Protocol#Resource_Pack_2",
+        "name": "ResourcePack",
+        "description": "Response from the client after being asked to download a resource pack",
+        "notes": null,
+        "fields": {
+          "status": "The current status."
+        }
+      },
+      "0x22": {
+        "url": "https://wiki.vg/Protocol#Set_Seen_Recipe",
+        "name": "SetSeenRecipe",
+        "description": "Sent when recipe is first seen in recipe book. Replaces Recipe Book Data, type 0",
+        "notes": null,
+        "fields": {
+          "recipeId": ""
+        }
+      },
+      "0x20": {
+        "url": "https://wiki.vg/Protocol#Pong_.28play.29",
+        "name": "Pong (play)",
+        "description": "Response to the clientbound Ping packet with the same id",
+        "notes": null,
+        "fields": {
+          "id": "Id is the same as the ping packet"
+        }
+      },
+      "0x1F": {
+        "url": "https://wiki.vg/Protocol#Player_Input",
+        "name": "PlayerInput",
+        "description": null,
+        "notes": "Also known as 'Input' packet.",
+        "fields": {
+          "sideways": "Positive to the left of the player",
+          "forward": "Positive forward",
+          "jumping": "",
+          "sneaking": "aka. unmount"
+        }
+      },
+      "0x30": {
+        "url": "https://wiki.vg/Protocol#Teleport_To_Entity",
+        "name": "TeleportToEntity",
+        "description": "Teleports the player to the given entity. The player must be in spectator mode.",
+        "notes": "The Notchian client only uses this to teleport to players, but it appears to accept any type of entity. The entity does not need to be in the same dimension as the player; if necessary, the player will be respawned in the right world. If the given entity cannot be found (or isn't loaded), this packet will be ignored. It will also be ignored if the player attempts to teleport to themselves.",
+        "fields": {
+          "uuid": "UUID of the player to teleport to (can also be an entity UUID)"
+        }
+      },
+      "0x2F": {
+        "url": "https://wiki.vg/Protocol#Swing_Arm",
+        "name": "SwingArm",
+        "description": "Sent when the player's arm swings.",
+        "notes": null,
+        "fields": {
+          "hand": "Hand used for the animation."
+        }
+      },
+      "0x1B": {
+        "url": "https://wiki.vg/Protocol#Place_Recipe",
+        "name": "PlaceRecipe",
+        "description": "This packet is sent when a player clicks a recipe in the crafting book that is craftable (white border)",
+        "notes": null,
+        "fields": {
+          "windowId": "Used for synchronization.",
+          "recipe": "The recipe that was clicked.",
+          "craftAll": "Affects the amount of items processed. True if shift is down when clicked."
+        }
+      },
+      "0x27": {
+        "url": "https://wiki.vg/Protocol#Set_Beacon_Effect",
+        "name": "SetBeaconEffect",
+        "description": "Changes the effect of the current beacon",
+        "notes": null,
+        "fields": {
+          "primaryEffect": "A potion effect.",
+          "secondaryEffect": "A potion effect."
+        }
+      },
+      "0x23": {
+        "url": "https://wiki.vg/Protocol#Rename_Item",
+        "name": "RenameItem",
+        "description": "Sent as a player is renaming an item in an anvil (each keypress in the anvil UI sends a new Rename Item packet).",
+        "notes": "If the new name is empty, then the item loses its custom name (this is different from setting the custom name to the normal name of the item). The item name may be no longer than 50 characters long, and if it is longer than that, then the rename is silently ignored.",
+        "fields": {
+          "name": "The new name of the item. String(32767)"
+        }
+      },
+      "0x12": {
+        "url": "https://wiki.vg/Protocol#Keep_Alive_2",
+        "name": "KeepAlive",
+        "description": "The server will frequently send out a keep-alive, each containing a random ID. The client must respond with the same packet. ",
+        "notes": null,
+        "fields": {
+          "id": "The randomly generated ID"
+        }
+      },
+      "0x11": {
+        "url": "https://wiki.vg/Protocol#Jigsaw_Generate",
+        "name": "JigsawGenerate",
+        "description": "Sent when Generate is pressed on the Jigsaw Block interface",
+        "notes": null,
+        "fields": {
+          "location": "Block entity location",
+          "maxDepth": "Value of the levels slider / max depth to generate",
+          "keepJigsaws": "Whether to keep existing jigsaws"
+        }
+      },
+      "0x1A": {
+        "url": "https://wiki.vg/Protocol#Pick_Item",
+        "name": "PickItem",
+        "description": "Used to swap out an empty space on the hotbar with the item in the given inventory slot. The Notchian client uses this for pick block functionality (middle click) to retrieve items from the inventory. ",
+        "notes": "The server will first search the player's hotbar for an empty slot, starting from the current slot and looping around to the slot before it. If there are no empty slots, it will start a second search from the current slot and find the first slot that does not contain an enchanted item. If there still are no slots that meet that criteria, then the server will use the currently selected slot.\nAfter finding the appropriate slot, the server swaps the items and then send 3 packets:\n- Set Container Slot, with window ID set to -2 and slot set to the newly chosen slot and the item set to the item that is now in that slot (which was previously at the slot the client requested)\n- Set Slot, with window ID set to -2 and slot set to the slot the player requested, with the item that is now in that slot and was previously on the hotbar slot\n- Set Held Item, with the slot set to the newly chosen slot.",
+        "fields": {
+          "slot": "The slot that the item is in."
+        }
+      },
+      "0x18": {
+        "url": "https://wiki.vg/Protocol#Move_Vehicle_2",
+        "name": "MoveVehicle",
+        "description": "Sent when a player moves in a vehicle. Fields are the same as in Set Player Position and Rotation.",
+        "notes": "All fields use absolute positioning and do not allow for relative positioning.",
+        "fields": {
+          "x": "",
+          "y": "",
+          "z": "",
+          "yaw": "Absolute rotation on the vertical axis, in degrees",
+          "pitch": "Absolute rotation on the horizontal axis, in degrees"
+        }
+      },
+      "0x09": {
+        "url": "https://wiki.vg/Protocol#Command_Suggestions_Request",
+        "name": "CommandSuggestionsRequest",
+        "description": "Sent when the client needs to tab-complete a minecraft:ask_server suggestion type",
+        "notes": null,
+        "fields": {
+          "transactionId": "The id of the transaction that the server will send back to the client in the response of this packet. Client generates this and increments it each time it sends another tab completion that doesn't get a response.",
+          "partialCommand": "ll text behind the cursor without the / (e.g. to the left of the cursor in left-to-right languages like English)"
+        }
+      },
+      "0x08": {
+        "url": "https://wiki.vg/Protocol#Client_Information",
+        "name": "ClientInformation",
+        "description": "Sent when the player connects, or when settings are changed. ",
+        "notes": null,
+        "fields": {
+          "locale": "e.g. en_GB or en_US",
+          "viewDistance": "Client-side render distance, in chunks",
+          "chatModeId": "0: enabled, 1: commands only, 2: hidden",
+          "chatModeTranslation": "Above entry but as a translation key",
+          "chatColors": "'Colors' multiplayer setting. Can the chat be colored?",
+          "displayedSkinPartsMask": "Bit mask, decides which skin parts are displayed.",
+          "displayedSkinParts": "Deserialized bit mask",
+          "displayedSkinParts.cape": "Whether cape is enabled",
+          "displayedSkinParts.jacket": "Whether jacket is enabled",
+          "displayedSkinParts.leftSleeve": "Whether left sleeve is enabled",
+          "displayedSkinParts.rightSleeve": "Whether right sleeve is enabled",
+          "displayedSkinParts.leftPantsLeg": "Whether left pants leg is enabled",
+          "displayedSkinParts.rightPantsLeg": "Whether right pants leg is enabled",
+          "displayedSkinParts.hat": "Whether hat is enabled",
+          "mainHandId": "0: Left, 1: Right",
+          "mainHandTranslation": "Translation of above entry",
+          "enableTextFiltering": "Enables filtering of text on signs and written book titles. Currently always false (i.e. the filtering is disabled)",
+          "allowServerListings": "Servers usually list online players, this option should let you not show up in that list. "
+        }
+      },
+      "0x31": {
+        "url": "https://wiki.vg/Protocol#Use_Item_On",
+        "name": "UseItemOn",
+        "description": "Upon placing a block, this packet is sent once. ",
+        "notes": "The Cursor Position X/Y/Z fields (also known as in-block coordinates) are calculated using raytracing. The unit corresponds to sixteen pixels in the default resource pack. For example, let's say a slab is being placed against the south face of a full block. The Cursor Position X will be higher if the player was pointing near the right (east) edge of the face, lower if pointing near the left. The Cursor Position Y will be used to determine whether it will appear as a bottom slab (values 0.0–0.5) or as a top slab (values 0.5-1.0). The Cursor Position Z should be 1.0 since the player was looking at the southernmost part of the block.\nnside block is true when a player's head (specifically eyes) are inside of a block's collision. In 1.13 and later versions, collision is rather complicated and individual blocks can have multiple collision boxes. For instance, a ring of vines has a non-colliding hole in the middle. This value is only true when the player is directly in the box. In practice, though, this value is only used by scaffolding to place in front of the player when sneaking inside of it (other blocks will place behind when you intersect with them -- try with glass for instance).",
+        "fields": {
+          "hand": "The hand from which the block is placed",
+          "location": "Block position.",
+          "cursorPosition": "The position of the crosshair on the block, from 0 to 1",
+          "insideBlock": "True when the player's head is inside of a block",
+          "sequence": ""
+        }
+      },
+      "0x32": {
+        "url": "https://wiki.vg/Protocol#Use_Item",
+        "name": "UseItem",
+        "description": "Sent when pressing the Use Item key (default: right click) with an item in hand.",
+        "notes": null,
+        "fields": {
+          "hand": "Hand used for the animation",
+          "sequence": ""
+        }
+      },
+      "0x19": {
+        "url": "https://wiki.vg/Protocol#Paddle_Boat",
+        "name": "PaddleBoat",
+        "description": "Used to visually update whether boat paddles are turning. The server will update the Boat entity metadata to match the values here.",
+        "notes": "Right paddle turning is set to true when the left button or forward button is held, left paddle turning is set to true when the right button or forward button is held.",
+        "fields": {
+          "leftPaddling": "True if the left paddle is turning",
+          "rightPaddling": "True if the right paddle is turning"
+        }
+      },
+      "0x21": {
+        "url": "https://wiki.vg/Protocol#Change_Recipe_Book_Settings",
+        "name": "ChangeRecipeBookSettings",
+        "description": "Replaces recipe book data, type 1.",
+        "notes": null,
+        "fields": {
+          "category": "Category of the recipe book",
+          "bookOpen": "Whether the recipe book is open",
+          "filterActive": "Whether the recipe book filter is active"
+        }
+      },
+      "0x17": {
+        "url": "https://wiki.vg/Protocol#Set_Player_On_Ground",
+        "name": "SetPlayerOnGround",
+        "description": "This packet is used to indicate whether the player is on ground (walking/swimming), or airborne (jumping/falling).\nWhen dropping from sufficient height, fall damage is applied when this state goes from false to true. The amount of damage applied is based on the point where it last changed from true to false. Note that there are several movement related packets containing this state.",
+        "notes": "This packet as well as Set Player Position, Set Player Rotation, and Set Player Position and Rotation are called the “serverbound movement packets”. Vanilla clients will send Move Player Position once every 20 ticks even for a stationary player.",
+        "fields": {
+          "onGround": "True if the player is on the ground, false otherwise"
+        }
+      },
+      "0x15": {
+        "url": "https://wiki.vg/Protocol#Set_Player_Position_and_Rotation",
+        "name": "SetPlayerPositionAndRotation",
+        "description": "A combination of Move Player Rotation and Move Player Position.",
+        "notes": "This packet as well as Set Player On Ground, Set Player Rotation, and Set Player Position and Rotation are called the “serverbound movement packets”. Vanilla clients will send Move Player Position once every 20 ticks even for a stationary player.",
+        "fields": {
+          "x": "Absolute position",
+          "y": "Absolute feet position, normally Head Y - 1.62",
+          "z": "Absolute position",
+          "yaw": "Absolute rotation on the X Axis, in degrees",
+          "pitch": "Absolute rotation on the Y Axis, in degrees",
+          "onGround": "True if the client is on the ground, false otherwise"
+        }
+      },
+      "0x16": {
+        "url": "https://wiki.vg/Protocol#Set_Player_Rotation",
+        "name": "SetPlayerRotation",
+        "description": "Updates the direction the player is looking in.",
+        "notes": "Yaw is measured in degrees, and does not follow classical trigonometry rules. Check wiki.vg page for more information.\n\nThis packet as well as Set Player On Ground, Set Player Position, and Set Player Position and Rotation are called the “serverbound movement packets”. Vanilla clients will send Move Player Position once every 20 ticks even for a stationary player.",
+        "fields": {
+          "yaw": "Absolute rotation on the X Axis, in degrees",
+          "pitch": "Absolute rotation on the Y Axis, in degrees",
+          "onGround": "True if the client is on the ground, false otherwise"
+        }
+      },
+      "0x14": {
+        "url": "https://wiki.vg/Protocol#Set_Player_Position",
+        "name": "SetPlayerPosition",
+        "description": "Updates the player's XYZ position on the server.",
+        "notes": "Check wiki.vg for more information about how 'moving too fast' check is done.\nThis packet as well as Set Player On Ground, Set Player Rotation, and Set Player Position and Rotation are called the “serverbound movement packets”. Vanilla clients will send Move Player Position once every 20 ticks even for a stationary player.",
+        "fields": {
+          "x": "Absolute position",
+          "y": "Absolute feet position, normally Head Y - 1.62",
+          "z": "Absolute position",
+          "onGround": "True if the client is on the ground, false otherwise"
+        }
+      }
     },
     "status": {
       "0x00": {
@@ -1375,7 +1939,7 @@
       },
       "0x01": {
         "url": "https://wiki.vg/Protocol#Ping_Request",
-        "name": "Ping Request",
+        "name": "PingRequest",
         "description": "",
         "notes": null,
         "fields": {
@@ -1386,7 +1950,7 @@
     "login": {
       "0x00": {
         "url": "https://wiki.vg/Protocol#Login_Start",
-        "name": "Login Start",
+        "name": "LoginStart",
         "description": "Start of login sequence, after handshake packet",
         "notes": "See https://wiki.vg/Protocol#Login for more information",
         "fields": {
@@ -1396,7 +1960,7 @@
       },
       "0x01": {
         "url": "https://wiki.vg/Protocol#Encryption_Response",
-        "name": "Encryption Response",
+        "name": "EncryptionResponse",
         "description": "",
         "notes": "See https://wiki.vg/Protocol_Encryption for details",
         "fields": {
@@ -1408,7 +1972,7 @@
       },
       "0x02": {
         "url": "https://wiki.vg/Protocol#Login_Plugin_Response",
-        "name": "Login Plugin Response",
+        "name": "LoginPluginResponse",
         "description": "",
         "notes": "In Notchian server, the maximum data length is 1048576 bytes.",
         "fields": {
